@@ -639,7 +639,6 @@
       </div>
       <div class="header-sub">
         <button id="dataBtn">⚙ Управление на данни</button>
-        <button id="notifyDebugBtn">🔔 Статус нотификации</button>
         <span id="todayText"></span>
       </div>
     </div>
@@ -730,7 +729,6 @@
         <option value="custom">По избор</option>
       </select>
       <small>Нотификациите работят, докато приложението е отворено.</small>
-      <small id="notifyInfoLine"></small>
     </div>
 
     <div class="field" id="notifyCustomField" style="display:none;">
@@ -792,13 +790,11 @@
     const notifySelect = document.getElementById("notifySelect");
     const notifyCustomField = document.getElementById("notifyCustomField");
     const notifyCustomInput = document.getElementById("notifyCustomInput");
-    const notifyInfoLine = document.getElementById("notifyInfoLine");
     const addSubtaskTempBtn = document.getElementById("addSubtaskTempBtn");
     const subtasksPreview = document.getElementById("subtasksPreview");
     const createTaskBtn = document.getElementById("createTaskBtn");
 
     const dataBtn = document.getElementById("dataBtn");
-    const notifyDebugBtn = document.getElementById("notifyDebugBtn");
     const themeToggleBtn = document.getElementById("themeToggleBtn");
 
     function formatToday() {
@@ -955,38 +951,6 @@
       return true;
     }
 
-    function formatNotifyPill(task) {
-      if (!task.dueDate && !task.dueTime) return null;
-      if (!task.notifyType || task.notifyType === "none") return null;
-
-      const due = getTaskDateTime(task);
-      if (!due) return null;
-
-      const timeStr = due.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const dateStr = due.toLocaleDateString("bg-BG", {
-        day: "numeric",
-        month: "short"
-      });
-
-      if (task.notifyType === "at") {
-        return `В часа (${dateStr}, ${timeStr})`;
-      }
-      if (task.notifyType === "before" && task.notifyMinutes) {
-        const notifyAt = new Date(due.getTime() - task.notifyMinutes * 60000);
-        const nTime = notifyAt.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-        const nDate = notifyAt.toLocaleDateString("bg-BG", {
-          day: "numeric",
-          month: "short"
-        });
-        return `${task.notifyMinutes} мин. преди (${nDate}, ${nTime})`;
-      }
-
-      return null;
-    }
-
     function renderTasks() {
       tasksContainer.innerHTML = "";
       const filtered = tasks.filter(applyFilters);
@@ -1067,11 +1031,10 @@
             meta.appendChild(pillRep);
           }
 
-          const notifyText = formatNotifyPill(task);
-          if (notifyText) {
+          if (task.notifyType && task.notifyType !== "none") {
             const pillNot = document.createElement("span");
             pillNot.className = "pill";
-            pillNot.textContent = "🔔 " + notifyText;
+            pillNot.textContent = "🔔 напомняне";
             meta.appendChild(pillNot);
           }
 
@@ -1151,54 +1114,6 @@
         notifySelect.value === "custom" ? "flex" : "none";
     }
 
-    function updateNotifyInfoPreview() {
-      const dateVal = dateInput.value || null;
-      const timeVal = timeInput.value || null;
-      const selectVal = notifySelect.value;
-      notifyInfoLine.textContent = "";
-
-      if (selectVal === "none") {
-        notifyInfoLine.textContent = "Няма да има напомняне.";
-        return;
-      }
-
-      if (!dateVal && !timeVal) {
-        notifyInfoLine.textContent =
-          "За да изчисля точен час на напомняне, задай дата или час.";
-        return;
-      }
-
-      const dummyTask = {
-        dueDate: dateVal,
-        dueTime: timeVal,
-        notifyType: "none",
-        notifyMinutes: null
-      };
-
-      if (selectVal === "at") {
-        dummyTask.notifyType = "at";
-      } else if (selectVal === "custom") {
-        const m = parseInt(notifyCustomInput.value, 10);
-        if (!isNaN(m) && m > 0) {
-          dummyTask.notifyType = "before";
-          dummyTask.notifyMinutes = m;
-        }
-      } else {
-        const m = parseInt(selectVal, 10);
-        if (!isNaN(m)) {
-          dummyTask.notifyType = "before";
-          dummyTask.notifyMinutes = m;
-        }
-      }
-
-      const text = formatNotifyPill(dummyTask);
-      if (text) {
-        notifyInfoLine.textContent = "Ще напомни: " + text;
-      } else {
-        notifyInfoLine.textContent = "";
-      }
-    }
-
     function openNewTask() {
       editingTaskId = null;
       newTaskTitleEl.textContent = "Нова задача";
@@ -1215,7 +1130,6 @@
       notifyCustomInput.value = "";
       updateRepeatCustomVisibility();
       updateNotifyCustomVisibility();
-      updateNotifyInfoPreview();
       updateSubtasksPreview();
       titleInput.focus();
     }
@@ -1251,7 +1165,6 @@
         }
       }
       updateNotifyCustomVisibility();
-      updateNotifyInfoPreview();
 
       tempSubtasks = (task.subtasks || []).map(s => ({ ...s }));
       updateSubtasksPreview();
@@ -1409,44 +1322,22 @@
       }
     }
 
-    function showNotificationDebug() {
-      if (!("Notification" in window)) {
-        alert("Този браузър не поддържа Notification API.");
-        return;
-      }
-
-      const perm = Notification.permission;
-      let msg = "Notification.permission = " + perm;
-
-      if (perm === "denied") {
-        msg += "\n\nБраузърът е блокирал нотификациите за този сайт. Трябва ръчно да ги разрешиш от настройките на браузъра/Android.";
-        alert(msg);
-        return;
-      }
-
-      if (perm === "default") {
-        msg += "\n\nЩе поискаме разрешение сега...";
-        alert(msg);
-        Notification.requestPermission().then(result => {
-          alert("Нов статус: " + result);
-          if (result === "granted") {
-            try {
-              new Notification("DailyList тест", { body: "Това е тестова нотификация." });
-            } catch (e) {
-              alert("Грешка при показване на нотификацията: " + e.message);
-            }
-          }
-        });
-        return;
-      }
-
-      // granted
-      msg += "\n\nЩе пробваме да покажем тестова нотификация.";
-      alert(msg);
+    async function showTaskNotification(task) {
       try {
-        new Notification("DailyList тест", { body: "Това е тестова нотификация." });
-      } catch (e) {
-        alert("Грешка при показване на нотификацията: " + e.message);
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted") return;
+
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg && reg.showNotification) {
+          reg.showNotification("DailyList", {
+            body: task.title
+            // по желание: icon: "icon-192.png",
+          });
+        } else if (typeof Notification === "function") {
+          new Notification("DailyList", { body: task.title });
+        }
+      } catch (err) {
+        console.log("Notification error:", err);
       }
     }
 
@@ -1455,23 +1346,25 @@
       if (Notification.permission !== "granted") return;
 
       const now = new Date();
+
       tasks.forEach(task => {
         if (task.completed || task.notified) return;
+
         const due = getTaskDateTime(task);
         if (!due) return;
+        if (task.notifyType === "none") return;
 
         let notifyAt = new Date(due.getTime());
         if (task.notifyType === "before" && task.notifyMinutes) {
           notifyAt = new Date(due.getTime() - task.notifyMinutes * 60000);
-        } else if (task.notifyType === "none") {
-          return;
         }
 
         if (notifyAt <= now) {
-          new Notification("DailyList", { body: task.title });
+          showTaskNotification(task);
           task.notified = true;
         }
       });
+
       saveTasks();
     }
 
@@ -1590,8 +1483,6 @@
       else if (choice === "2") importData();
     });
 
-    notifyDebugBtn.addEventListener("click", showNotificationDebug);
-
     themeToggleBtn.addEventListener("click", toggleTheme);
 
     calendarToggleBtn.addEventListener("click", () => {
@@ -1609,19 +1500,8 @@
       renderCalendar();
     });
 
-    repeatSelect.addEventListener("change", () => {
-      updateRepeatCustomVisibility();
-      updateNotifyInfoPreview();
-    });
-
-    notifySelect.addEventListener("change", () => {
-      updateNotifyCustomVisibility();
-      updateNotifyInfoPreview();
-    });
-
-    dateInput.addEventListener("change", updateNotifyInfoPreview);
-    timeInput.addEventListener("change", updateNotifyInfoPreview);
-    notifyCustomInput.addEventListener("input", updateNotifyInfoPreview);
+    repeatSelect.addEventListener("change", updateRepeatCustomVisibility);
+    notifySelect.addEventListener("change", updateNotifyCustomVisibility);
 
     // SERVICE WORKER
 
