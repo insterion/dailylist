@@ -638,10 +638,10 @@
         </div>
       </div>
       <div class="header-sub">
-  <button id="dataBtn">⚙ Управление на данни</button>
-  <button id="notifyDebugBtn">🔔 Статус нотификации</button>
-  <span id="todayText"></span>
-</div>
+        <button id="dataBtn">⚙ Управление на данни</button>
+        <button id="notifyDebugBtn">🔔 Статус нотификации</button>
+        <span id="todayText"></span>
+      </div>
     </div>
 
     <!-- CALENDAR -->
@@ -798,8 +798,8 @@
     const createTaskBtn = document.getElementById("createTaskBtn");
 
     const dataBtn = document.getElementById("dataBtn");
-const notifyDebugBtn = document.getElementById("notifyDebugBtn");
-const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const notifyDebugBtn = document.getElementById("notifyDebugBtn");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
 
     function formatToday() {
       const now = new Date();
@@ -1402,50 +1402,51 @@ const themeToggleBtn = document.getElementById("themeToggleBtn");
 
     // NOTIFICATIONS (while app is open)
 
-    function ensureNotificationPermission() function showNotificationDebug() {
-  if (!("Notification" in window)) {
-    alert("Този браузър не поддържа Notification API.");
-    return;
-  }
-
-  const perm = Notification.permission;
-  let msg = "Notification.permission = " + perm;
-
-  if (perm === "denied") {
-    msg += "\n\nБраузърът е блокирал нотификациите за този сайт. Трябва ръчно да ги разрешиш от настройките на браузъра/Android.";
-    alert(msg);
-    return;
-  }
-
-  if (perm === "default") {
-    msg += "\n\nЩе поискаме разрешение сега...";
-    alert(msg);
-    Notification.requestPermission().then(result => {
-      alert("Нов статус: " + result);
-      if (result === "granted") {
-        try {
-          new Notification("DailyList тест", { body: "Това е тестова нотификация." });
-        } catch (e) {
-          alert("Грешка при показване на нотификацията: " + e.message);
-        }
-      }
-    });
-    return;
-  }
-
-  // granted
-  msg += "\n\nЩе пробваме да покажем тестова нотификация.";
-  alert(msg);
-  try {
-    new Notification("DailyList тест", { body: "Това е тестова нотификация." });
-  } catch (e) {
-    alert("Грешка при показване на нотификацията: " + e.message);
-  }
-}
-{
+    function ensureNotificationPermission() {
       if (!("Notification" in window)) return;
       if (Notification.permission === "default") {
         Notification.requestPermission();
+      }
+    }
+
+    function showNotificationDebug() {
+      if (!("Notification" in window)) {
+        alert("Този браузър не поддържа Notification API.");
+        return;
+      }
+
+      const perm = Notification.permission;
+      let msg = "Notification.permission = " + perm;
+
+      if (perm === "denied") {
+        msg += "\n\nБраузърът е блокирал нотификациите за този сайт. Трябва ръчно да ги разрешиш от настройките на браузъра/Android.";
+        alert(msg);
+        return;
+      }
+
+      if (perm === "default") {
+        msg += "\n\nЩе поискаме разрешение сега...";
+        alert(msg);
+        Notification.requestPermission().then(result => {
+          alert("Нов статус: " + result);
+          if (result === "granted") {
+            try {
+              new Notification("DailyList тест", { body: "Това е тестова нотификация." });
+            } catch (e) {
+              alert("Грешка при показване на нотификацията: " + e.message);
+            }
+          }
+        });
+        return;
+      }
+
+      // granted
+      msg += "\n\nЩе пробваме да покажем тестова нотификация.";
+      alert(msg);
+      try {
+        new Notification("DailyList тест", { body: "Това е тестова нотификация." });
+      } catch (e) {
+        alert("Грешка при показване на нотификацията: " + e.message);
       }
     }
 
@@ -1588,7 +1589,9 @@ const themeToggleBtn = document.getElementById("themeToggleBtn");
       if (choice === "1") exportData();
       else if (choice === "2") importData();
     });
-notifyDebugBtn.addEventListener("click", showNotificationDebug);
+
+    notifyDebugBtn.addEventListener("click", showNotificationDebug);
+
     themeToggleBtn.addEventListener("click", toggleTheme);
 
     calendarToggleBtn.addEventListener("click", () => {
@@ -1644,4 +1647,3 @@ notifyDebugBtn.addEventListener("click", showNotificationDebug);
   </script>
 </body>
 </html>
-
