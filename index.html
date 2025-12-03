@@ -1032,12 +1032,33 @@
           }
 
           if (task.notifyType && task.notifyType !== "none") {
-            const pillNot = document.createElement("span");
-            pillNot.className = "pill";
-            pillNot.textContent = "🔔 напомняне";
-            meta.appendChild(pillNot);
-          }
+  const pillNot = document.createElement("span");
+  pillNot.className = "pill";
 
+  let label = "🔔 напомняне";
+
+  if (task.notifyType === "at") {
+    // Напомня точно в часа
+    label = "🔔 В часа";
+  } else if (task.notifyType === "before" && task.notifyMinutes) {
+    const mins = task.notifyMinutes;
+    if (mins % 1440 === 0) {
+      // цяло число дни
+      const d = mins / 1440;
+      label = "🔔 " + d + " дн. преди";
+    } else if (mins % 60 === 0 && mins >= 60) {
+      // цяло число часове
+      const h = mins / 60;
+      label = "🔔 " + h + " ч. преди";
+    } else {
+      // минути
+      label = "🔔 " + mins + " мин. преди";
+    }
+  }
+
+  pillNot.textContent = label;
+  meta.appendChild(pillNot);
+}
           if (meta.childNodes.length) taskEl.appendChild(meta);
 
           const actions = document.createElement("div");
