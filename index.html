@@ -154,7 +154,7 @@
     }
 
     body.light .calendar-card {
-      background: #f9fafб;
+      background: #f9fafb;
       border-color: #cbd5f5;
     }
 
@@ -619,6 +619,104 @@
       box-shadow: 0 18px 40px rgba(37, 99, 235, 0.4);
     }
 
+    /* DATA DIALOG */
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+
+    .dialog {
+      background: #020617;
+      border-radius: 20px;
+      padding: 14px 16px 12px;
+      border: 1px solid #111827;
+      max-width: 320px;
+      width: calc(100% - 48px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    body.light .dialog {
+      background: #ffffff;
+      border-color: #cbd5f5;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
+    }
+
+    .dialog-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .dialog-text {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    body.light .dialog-text {
+      color: #4b5563;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .dialog-buttons button {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .dialog-buttons button.primary {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #f9fafb;
+    }
+
+    body.light .dialog-buttons button {
+      background: #f9fafb;
+      border-color: #cbd5f5;
+      color: #111827;
+    }
+
+    body.light .dialog-buttons button.primary {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #f9fafb;
+    }
+
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .dialog-footer button {
+      border: none;
+      background: none;
+      color: #9ca3af;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+
+    .dialog-footer button:hover {
+      text-decoration: underline;
+    }
+
     @media (max-width: 520px) {
       .app {
         border-radius: 20px;
@@ -749,6 +847,23 @@
     </div>
   </div>
 
+  <!-- DATA DIALOG -->
+  <div id="dataDialogBackdrop" class="dialog-backdrop">
+    <div class="dialog">
+      <div class="dialog-title">Управление на данни</div>
+      <div class="dialog-text">
+        Тук можеш да запазиш задачите във файл или да заредиш по-стар файл с задачи.
+      </div>
+      <div class="dialog-buttons">
+        <button id="exportBtn" class="primary">Експорт на данни</button>
+        <button id="importBtn">Импорт на данни</button>
+      </div>
+      <div class="dialog-footer">
+        <button id="closeDataDialogBtn">Затвори</button>
+      </div>
+    </div>
+  </div>
+
   <!-- FLOATING BUTTON -->
   <button id="fabBtn" class="fab">+</button>
 
@@ -796,6 +911,11 @@
 
     const dataBtn = document.getElementById("dataBtn");
     const themeToggleBtn = document.getElementById("themeToggleBtn");
+
+    const dataDialogBackdrop = document.getElementById("dataDialogBackdrop");
+    const exportBtn = document.getElementById("exportBtn");
+    const importBtn = document.getElementById("importBtn");
+    const closeDataDialogBtn = document.getElementById("closeDataDialogBtn");
 
     function formatToday() {
       const now = new Date();
@@ -1510,6 +1630,16 @@
       });
     }
 
+    // DATA DIALOG CONTROL
+
+    function openDataDialog() {
+      dataDialogBackdrop.style.display = "flex";
+    }
+
+    function closeDataDialog() {
+      dataDialogBackdrop.style.display = "none";
+    }
+
     // EVENTS
 
     fabBtn.addEventListener("click", openNewTask);
@@ -1537,10 +1667,22 @@
       });
     });
 
-    dataBtn.addEventListener("click", () => {
-      const choice = prompt("Напиши:\n1 – Експорт\n2 – Импорт");
-      if (choice === "1") exportData();
-      else if (choice === "2") importData();
+    dataBtn.addEventListener("click", openDataDialog);
+    closeDataDialogBtn.addEventListener("click", closeDataDialog);
+    dataDialogBackdrop.addEventListener("click", (e) => {
+      if (e.target === dataDialogBackdrop) {
+        closeDataDialog();
+      }
+    });
+
+    exportBtn.addEventListener("click", () => {
+      exportData();
+      closeDataDialog();
+    });
+
+    importBtn.addEventListener("click", () => {
+      importData();
+      closeDataDialog();
     });
 
     themeToggleBtn.addEventListener("click", toggleTheme);
