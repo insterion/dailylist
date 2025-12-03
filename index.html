@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <title>DailyList</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#020617" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: #020617;
+      color: #e5e7eb;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    body.light {
+      background: #e5e7eb;
+      color: #020617;
+    }
+
+    .app {
+      background: #020617;
+      border-radius: 24px;
+      padding: 14px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      border: 1px solid #0f172a;
+      position: relative;
+    }
+
+    body.light .app {
+      background: #ffffff;
+      border-color: #cbd5f5;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
+    }
+
+    /* HEADER */
+
+    .header-card {
+      background: #020617;
+      border-radius: 20px;
+      padding: 12px;
+      border: 1px solid #111827;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    body.light .header-card {
+      background: #f3f4ff;
+      border-color: #cbd5f5;
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-button {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: none;
+      background: #0b1120;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .icon-button.primary {
+      background: #2563eb;
+      color: #f9fafb;
+    }
+
+    body.light .icon-button {
+      background: #e5e7eb;
+      color: #020617;
+    }
+
+    body.light .icon-button.primary {
+      background: #2563eb;
+      color: #f9fafb;
+    }
+
+    .header-sub {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    body.light .header-sub {
+      color: #4b5563;
+    }
+
+    .header-sub button {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .header-sub button:hover {
+      text-decoration: underline;
+    }
+
+    /* CALENDAR */
+
+    .calendar-card {
+      background: #020617;
+      border-radius: 20px;
+      padding: 10px 10px 8px;
+      border: 1px solid #111827;
+      margin-bottom: 10px;
+      display: none;
+      font-size: 0.78rem;
+    }
+
+    body.light .calendar-card {
+      background: #f9fafb;
+      border-color: #cbd5f5;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .calendar-header button {
+      border: none;
+      background: none;
+      color: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+
+    .calendar-header span {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .calendar-day-name {
+      text-align: center;
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    body.light .calendar-day-name {
+      color: #6b7280;
+    }
+
+    .calendar-day {
+      text-align: center;
+      padding: 4px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 26px;
+      position: relative;
+    }
+
+    .calendar-day.disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    .calendar-day.today {
+      border: 1px solid #2563eb;
+    }
+
+    .calendar-day.selected {
+      background: #2563eb;
+      color: #f9fafb;
+    }
+
+    .calendar-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: #2563eb;
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    body.light .calendar-dot {
+      background: #2563eb;
+    }
+
+    /* SEARCH + FILTERS */
+
+    .search-card {
+      background: #020617;
+      border-radius: 20px;
+      padding: 8px 10px 10px;
+      border: 1px solid #111827;
+      margin-bottom: 10px;
+    }
+
+    body.light .search-card {
+      background: #f9fafb;
+      border-color: #cbd5f5;
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #020617;
+      border-radius: 14px;
+      padding: 5px 10px;
+      border: 1px solid #1f2937;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+
+    body.light .search-row {
+      background: #ffffff;
+      border-color: #cbd5f5;
+    }
+
+    .search-row span {
+      color: #6b7280;
+    }
+
+    .search-row input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      font-size: 0.9rem;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #9ca3af;
+      font-size: 0.8rem;
+      padding: 6px 4px;
+      cursor: pointer;
+    }
+
+    body.light .filter-btn {
+      background: #e5e7eb;
+      border-color: #cbd5f5;
+      color: #374151;
+    }
+
+    .filter-btn.active {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #f9fafb;
+      font-weight: 500;
+    }
+
+    /* TASKS LIST */
+
+    .tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 45vh;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 12px;
+    }
+
+    .empty {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin: 10px 0;
+    }
+
+    body.light .empty {
+      color: #6b7280;
+    }
+
+    .task {
+      background: #020617;
+      border-radius: 18px;
+      padding: 8px 10px 6px;
+      border: 1px solid #111827;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.86rem;
+    }
+
+    body.light .task {
+      background: #ffffff;
+      border-color: #e5e7eb;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .task-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .task-main input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #22c55e;
+      cursor: pointer;
+    }
+
+    .task-title {
+      flex: 1;
+      word-break: break-word;
+      font-weight: 500;
+    }
+
+    .task.completed .task-title {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    body.light .task.completed .task-title {
+      color: #9ca3af;
+    }
+
+    .task-desc {
+      margin-left: 24px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    body.light .task-desc {
+      color: #6b7280;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 0.72rem;
+      margin-left: 24px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 2px 6px;
+      border: 1px solid #1f2937;
+      color: #9ca3af;
+    }
+
+    body.light .pill {
+      border-color: #cbd5f5;
+      color: #4b5563;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 4px;
+      margin-left: 24px;
+      margin-top: 2px;
+    }
+
+    .task-actions button {
+      border: none;
+      background: none;
+      color: #9ca3af;
+      font-size: 0.78rem;
+      padding: 2px 4px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .task-actions button:hover {
+      background: #111827;
+    }
+
+    body.light .task-actions button:hover {
+      background: #e5e7eb;
+    }
+
+    .subtasks {
+      margin-left: 24px;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.78rem;
+    }
+
+    .subtask {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .subtask input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #22c55e;
+      cursor: pointer;
+    }
+
+    .subtask.completed span {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    body.light .subtask.completed span {
+      color: #9ca3af;
+    }
+
+    /* NEW TASK PANEL */
+
+    .new-task-card {
+      background: #020617;
+      border-radius: 22px;
+      padding: 10px 12px 12px;
+      border: 1px solid #111827;
+      margin-bottom: 40px;
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 80px;
+      max-width: 480px;
+      width: calc(100% - 32px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+      display: none;
+      z-index: 20;
+    }
+
+    body.light .new-task-card {
+      background: #ffffff;
+      border-color: #cbd5f5;
+    }
+
+    .new-task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .new-task-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .new-task-close {
+      border: none;
+      background: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 2px 4px;
+    }
+
+    .field {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .field label {
+      color: #9ca3af;
+    }
+
+    body.light .field label {
+      color: #4b5563;
+    }
+
+    .field input[type="text"],
+    .field textarea,
+    .field input[type="date"],
+    .field input[type="time"],
+    .field input[type="number"],
+    .field select {
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    body.light .field input[type="text"],
+    body.light .field textarea,
+    body.light .field input[type="date"],
+    body.light .field input[type="time"],
+    body.light .field input[type="number"],
+    body.light .field select {
+      background: #f9fafb;
+      color: #020617;
+      border-color: #cbd5f5;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 48px;
+    }
+
+    .inline-fields {
+      display: flex;
+      gap: 6px;
+    }
+
+    .inline-fields .field {
+      flex: 1;
+    }
+
+    .field small {
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
+
+    .new-task-actions {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .primary-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: #2563eb;
+      color: #f9fafb;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .primary-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* FLOATING ADD BUTTON */
+
+    .fab {
+      position: fixed;
+      right: 26px;
+      bottom: 26px;
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      border: none;
+      background: #2563eb;
+      color: #f9fafb;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.6);
+      cursor: pointer;
+      z-index: 15;
+    }
+
+    body.light .fab {
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.4);
+    }
+
+    @media (max-width: 520px) {
+      .app {
+        border-radius: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- HEADER -->
+    <div class="header-card">
+      <div class="header-main">
+        <div class="header-title">DailyList</div>
+        <div class="header-right">
+          <button id="calendarToggleBtn" class="icon-button" title="Календар">📅</button>
+          <button id="themeToggleBtn" class="icon-button" title="Тема">☾</button>
+        </div>
+      </div>
+      <div class="header-sub">
+        <button id="dataBtn">⚙ Управление на данни</button>
+        <span id="todayText"></span>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="calendarCard" class="calendar-card">
+      <div class="calendar-header">
+        <button id="prevMonthBtn">‹</button>
+        <span id="calendarMonthLabel"></span>
+        <button id="nextMonthBtn">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- SEARCH + FILTERS -->
+    <div class="search-card">
+      <div class="search-row">
+        <span>🔍</span>
+        <input id="searchInput" type="text" placeholder="Търси задача..." />
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">Всички</button>
+        <button class="filter-btn" data-filter="active">Активни</button>
+        <button class="filter-btn" data-filter="done">Готови</button>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="tasksContainer" class="tasks"></div>
+    <div id="emptyState" class="empty" style="display:none;">
+      Няма задачи. Натисни „+“, за да добавиш първата 👆
+    </div>
+  </div>
+
+  <!-- NEW TASK PANEL -->
+  <div id="newTaskCard" class="new-task-card">
+    <div class="new-task-header">
+      <div class="new-task-title" id="newTaskTitle">Нова задача</div>
+      <button id="closeNewTaskBtn" class="new-task-close">✕</button>
+    </div>
+
+    <div class="field">
+      <label for="titleInput">Заглавие *</label>
+      <input id="titleInput" type="text" placeholder="Например: Плати сметката за ток" />
+    </div>
+
+    <div class="field">
+      <label for="descInput">Описание</label>
+      <textarea id="descInput" placeholder="Допълнителни детайли..."></textarea>
+    </div>
+
+    <div class="inline-fields">
+      <div class="field">
+        <label for="dateInput">Дата</label>
+        <input id="dateInput" type="date" />
+      </div>
+      <div class="field">
+        <label for="timeInput">Час</label>
+        <input id="timeInput" type="time" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="repeatSelect">Повторяемост</label>
+      <select id="repeatSelect">
+        <option value="none">Без повторение</option>
+        <option value="daily">Всеки ден</option>
+        <option value="weekly">Всяка седмица</option>
+        <option value="monthly">Всеки месец</option>
+        <option value="yearly">Всяка година</option>
+        <option value="custom">По избор</option>
+      </select>
+    </div>
+
+    <div class="field" id="repeatCustomField" style="display:none;">
+      <label for="repeatCustomInput">Интервал (дни)</label>
+      <input id="repeatCustomInput" type="number" min="1" placeholder="Например: 3" />
+    </div>
+
+    <div class="field">
+      <label for="notifySelect">Нотификация</label>
+      <select id="notifySelect">
+        <option value="none">Без напомняне</option>
+        <option value="at">В часа</option>
+        <option value="10">10 мин. преди</option>
+        <option value="60">1 час преди</option>
+        <option value="1440">1 ден преди</option>
+        <option value="custom">По избор</option>
+      </select>
+      <small>Нотификациите работят, докато приложението е отворено.</small>
+      <small id="notifyInfoLine"></small>
+    </div>
+
+    <div class="field" id="notifyCustomField" style="display:none;">
+      <label for="notifyCustomInput">Минут(и) преди</label>
+      <input id="notifyCustomInput" type="number" min="1" placeholder="Например: 30" />
+    </div>
+
+    <div class="field">
+      <label>Подзадачи</label>
+      <button id="addSubtaskTempBtn" class="primary-btn" style="padding:4px 10px;font-size:0.8rem;width:max-content;background:#0f172a;">
+        + Добави подзадача
+      </button>
+      <small id="subtasksPreview" style="margin-top:2px;">Няма подзадачи.</small>
+    </div>
+
+    <div class="new-task-actions">
+      <button id="createTaskBtn" class="primary-btn">Добави</button>
+    </div>
+  </div>
+
+  <!-- FLOATING BUTTON -->
+  <button id="fabBtn" class="fab">+</button>
+
+  <script>
+    const STORAGE_KEY = "dailylist_tasks_v2";
+    const THEME_KEY = "dailylist_theme";
+
+    let tasks = [];
+    let tempSubtasks = [];
+    let statusFilter = "all";
+    let searchQuery = "";
+    let calendarFilterDate = null;
+    let editingTaskId = null;
+
+    const todayText = document.getElementById("todayText");
+    const tasksContainer = document.getElementById("tasksContainer");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+
+    const calendarCard = document.getElementById("calendarCard");
+    const calendarToggleBtn = document.getElementById("calendarToggleBtn");
+    const calendarGrid = document.getElementById("calendarGrid");
+    const calendarMonthLabel = document.getElementById("calendarMonthLabel");
+    const prevMonthBtn = document.getElementById("prevMonthBtn");
+    const nextMonthBtn = document.getElementById("nextMonthBtn");
+
+    const fabBtn = document.getElementById("fabBtn");
+    const newTaskCard = document.getElementById("newTaskCard");
+    const closeNewTaskBtn = document.getElementById("closeNewTaskBtn");
+    const newTaskTitleEl = document.getElementById("newTaskTitle");
+    const titleInput = document.getElementById("titleInput");
+    const descInput = document.getElementById("descInput");
+    const dateInput = document.getElementById("dateInput");
+    const timeInput = document.getElementById("timeInput");
+    const repeatSelect = document.getElementById("repeatSelect");
+    const repeatCustomField = document.getElementById("repeatCustomField");
+    const repeatCustomInput = document.getElementById("repeatCustomInput");
+    const notifySelect = document.getElementById("notifySelect");
+    const notifyCustomField = document.getElementById("notifyCustomField");
+    const notifyCustomInput = document.getElementById("notifyCustomInput");
+    const notifyInfoLine = document.getElementById("notifyInfoLine");
+    const addSubtaskTempBtn = document.getElementById("addSubtaskTempBtn");
+    const subtasksPreview = document.getElementById("subtasksPreview");
+    const createTaskBtn = document.getElementById("createTaskBtn");
+
+    const dataBtn = document.getElementById("dataBtn");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+
+    function formatToday() {
+      const now = new Date();
+      const opts = { weekday: "short", day: "numeric", month: "short" };
+      todayText.textContent = now.toLocaleDateString("bg-BG", opts);
+    }
+
+    function loadTheme() {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored === "light") {
+        document.body.classList.add("light");
+        themeToggleBtn.textContent = "☀";
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      const isLight = document.body.classList.contains("light");
+      themeToggleBtn.textContent = isLight ? "☀" : "☾";
+      localStorage.setItem(THEME_KEY, isLight ? "light" : "dark");
+    }
+
+    function loadTasks() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      try {
+        const arr = JSON.parse(raw) || [];
+        return arr.map(t => ({
+          subtasks: [],
+          notified: false,
+          repeatCustomDays: null,
+          notifyType: "none",
+          notifyMinutes: null,
+          ...t
+        }));
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function createSubtaskObj(title) {
+      return {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        title: title.trim(),
+        completed: false
+      };
+    }
+
+    function createTaskObj({
+      title,
+      description,
+      dueDate,
+      dueTime,
+      repeat,
+      repeatCustomDays,
+      notifyType,
+      notifyMinutes,
+      subtasks
+    }) {
+      return {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        title: title.trim(),
+        description: description.trim(),
+        dueDate: dueDate || null,
+        dueTime: dueTime || null,
+        repeat: repeat || "none",
+        repeatCustomDays: repeat === "custom" ? (repeatCustomDays || null) : null,
+        notifyType: notifyType || "none",
+        notifyMinutes: notifyType === "before" ? (notifyMinutes || null) : null,
+        completed: false,
+        createdAt: new Date().toISOString(),
+        subtasks: subtasks || [],
+        notified: false
+      };
+    }
+
+    function getTaskDateTime(task) {
+      if (!task.dueDate && !task.dueTime) return null;
+      const datePart = task.dueDate || new Date().toISOString().slice(0, 10);
+      const timePart = task.dueTime || "00:00";
+      return new Date(datePart + "T" + timePart);
+    }
+
+    function formatDue(task) {
+      if (!task.dueDate && !task.dueTime) return null;
+      const dt = getTaskDateTime(task);
+      const dateStr = dt.toLocaleDateString("bg-BG", {
+        day: "numeric",
+        month: "short"
+      });
+      const timeStr = dt.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      if (task.dueDate && task.dueTime) return dateStr + " " + timeStr;
+      if (task.dueDate) return dateStr;
+      return timeStr;
+    }
+
+    function repeatLabel(task) {
+      const repeat = task.repeat;
+      if (!repeat || repeat === "none") return null;
+      if (repeat === "daily") return "Всеки ден";
+      if (repeat === "weekly") return "Всяка седмица";
+      if (repeat === "monthly") return "Всеки месец";
+      if (repeat === "yearly") return "Всяка година";
+      if (repeat === "custom" && task.repeatCustomDays) {
+        return "На всеки " + task.repeatCustomDays + " дни";
+      }
+      return repeat;
+    }
+
+    function scheduleNextOccurrence(task) {
+      if (!task.dueDate || task.repeat === "none") return;
+      const current = new Date(task.dueDate + "T00:00:00");
+      if (task.repeat === "daily") current.setDate(current.getDate() + 1);
+      else if (task.repeat === "weekly") current.setDate(current.getDate() + 7);
+      else if (task.repeat === "monthly") current.setMonth(current.getMonth() + 1);
+      else if (task.repeat === "yearly") current.setFullYear(current.getFullYear() + 1);
+      else if (task.repeat === "custom" && task.repeatCustomDays) {
+        current.setDate(current.getDate() + task.repeatCustomDays);
+      } else {
+        return;
+      }
+      const nextDate = current.toISOString().slice(0, 10);
+      const newTask = createTaskObj({
+        title: task.title,
+        description: task.description,
+        dueDate: nextDate,
+        dueTime: task.dueTime,
+        repeat: task.repeat,
+        repeatCustomDays: task.repeatCustomDays,
+        notifyType: task.notifyType,
+        notifyMinutes: task.notifyMinutes,
+        subtasks: task.subtasks.map(s => ({ ...s, completed: false }))
+      });
+      tasks.push(newTask);
+    }
+
+    function applyFilters(task) {
+      if (searchQuery && !task.title.toLowerCase().includes(searchQuery)) {
+        return false;
+      }
+      if (calendarFilterDate && task.dueDate !== calendarFilterDate) {
+        return false;
+      }
+      if (statusFilter === "active" && task.completed) return false;
+      if (statusFilter === "done" && !task.completed) return false;
+      return true;
+    }
+
+    function formatNotifyPill(task) {
+      if (!task.dueDate && !task.dueTime) return null;
+      if (!task.notifyType || task.notifyType === "none") return null;
+
+      const due = getTaskDateTime(task);
+      if (!due) return null;
+
+      const timeStr = due.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const dateStr = due.toLocaleDateString("bg-BG", {
+        day: "numeric",
+        month: "short"
+      });
+
+      if (task.notifyType === "at") {
+        return `В часа (${dateStr}, ${timeStr})`;
+      }
+      if (task.notifyType === "before" && task.notifyMinutes) {
+        const notifyAt = new Date(due.getTime() - task.notifyMinutes * 60000);
+        const nTime = notifyAt.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+        const nDate = notifyAt.toLocaleDateString("bg-BG", {
+          day: "numeric",
+          month: "short"
+        });
+        return `${task.notifyMinutes} мин. преди (${nDate}, ${nTime})`;
+      }
+
+      return null;
+    }
+
+    function renderTasks() {
+      tasksContainer.innerHTML = "";
+      const filtered = tasks.filter(applyFilters);
+
+      if (!filtered.length) {
+        emptyState.style.display = "block";
+      } else {
+        emptyState.style.display = "none";
+      }
+
+      filtered
+        .sort((a, b) => {
+          if (a.completed !== b.completed) return a.completed ? 1 : -1;
+          const aDt = getTaskDateTime(a);
+          const bDt = getTaskDateTime(b);
+          if (aDt && bDt) return aDt - bDt;
+          if (aDt) return -1;
+          if (bDt) return 1;
+          return 0;
+        })
+        .forEach(task => {
+          const taskEl = document.createElement("div");
+          taskEl.className = "task" + (task.completed ? " completed" : "");
+
+          const header = document.createElement("div");
+          header.className = "task-header";
+
+          const main = document.createElement("div");
+          main.className = "task-main";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = task.completed;
+          cb.addEventListener("change", () => {
+            const wasCompleted = task.completed;
+            task.completed = cb.checked;
+            if (!wasCompleted && task.completed && task.repeat !== "none") {
+              scheduleNextOccurrence(task);
+            }
+            task.notified = false;
+            saveTasks();
+            renderTasks();
+            renderCalendar();
+          });
+
+          const title = document.createElement("div");
+          title.className = "task-title";
+          title.textContent = task.title;
+
+          main.appendChild(cb);
+          main.appendChild(title);
+          header.appendChild(main);
+          taskEl.appendChild(header);
+
+          if (task.description) {
+            const desc = document.createElement("div");
+            desc.className = "task-desc";
+            desc.textContent = task.description;
+            taskEl.appendChild(desc);
+          }
+
+          const meta = document.createElement("div");
+          meta.className = "task-meta";
+
+          const dueText = formatDue(task);
+          if (dueText) {
+            const pillDate = document.createElement("span");
+            pillDate.className = "pill";
+            pillDate.textContent = "📅 " + dueText;
+            meta.appendChild(pillDate);
+          }
+
+          const repText = repeatLabel(task);
+          if (repText) {
+            const pillRep = document.createElement("span");
+            pillRep.className = "pill";
+            pillRep.textContent = "🔁 " + repText;
+            meta.appendChild(pillRep);
+          }
+
+          const notifyText = formatNotifyPill(task);
+          if (notifyText) {
+            const pillNot = document.createElement("span");
+            pillNot.className = "pill";
+            pillNot.textContent = "🔔 " + notifyText;
+            meta.appendChild(pillNot);
+          }
+
+          if (meta.childNodes.length) taskEl.appendChild(meta);
+
+          const actions = document.createElement("div");
+          actions.className = "task-actions";
+
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Редактирай";
+          editBtn.addEventListener("click", () => {
+            openEditTask(task);
+          });
+
+          const addSub = document.createElement("button");
+          addSub.textContent = "+ Подзадача";
+          addSub.addEventListener("click", () => {
+            const name = prompt("Име на подзадачата:");
+            if (!name || !name.trim()) return;
+            task.subtasks.push(createSubtaskObj(name));
+            saveTasks();
+            renderTasks();
+          });
+
+          const del = document.createElement("button");
+          del.textContent = "Изтрий";
+          del.addEventListener("click", () => {
+            if (!confirm("Да изтрием ли задачата?")) return;
+            tasks = tasks.filter(t => t.id !== task.id);
+            saveTasks();
+            renderTasks();
+            renderCalendar();
+          });
+
+          actions.appendChild(editBtn);
+          actions.appendChild(addSub);
+          actions.appendChild(del);
+          taskEl.appendChild(actions);
+
+          if (task.subtasks && task.subtasks.length) {
+            const stWrap = document.createElement("div");
+            stWrap.className = "subtasks";
+            task.subtasks.forEach(sub => {
+              const sEl = document.createElement("div");
+              sEl.className =
+                "subtask" + (sub.completed ? " completed" : "");
+              const sCb = document.createElement("input");
+              sCb.type = "checkbox";
+              sCb.checked = sub.completed;
+              sCb.addEventListener("change", () => {
+                sub.completed = sCb.checked;
+                saveTasks();
+                renderTasks();
+              });
+              const sTxt = document.createElement("span");
+              sTxt.textContent = sub.title;
+              sEl.appendChild(sCb);
+              sEl.appendChild(sTxt);
+              stWrap.appendChild(sEl);
+            });
+            taskEl.appendChild(stWrap);
+          }
+
+          tasksContainer.appendChild(taskEl);
+        });
+    }
+
+    // NEW TASK PANEL
+
+    function updateRepeatCustomVisibility() {
+      repeatCustomField.style.display =
+        repeatSelect.value === "custom" ? "flex" : "none";
+    }
+
+    function updateNotifyCustomVisibility() {
+      notifyCustomField.style.display =
+        notifySelect.value === "custom" ? "flex" : "none";
+    }
+
+    function updateNotifyInfoPreview() {
+      const dateVal = dateInput.value || null;
+      const timeVal = timeInput.value || null;
+      const selectVal = notifySelect.value;
+      notifyInfoLine.textContent = "";
+
+      if (selectVal === "none") {
+        notifyInfoLine.textContent = "Няма да има напомняне.";
+        return;
+      }
+
+      if (!dateVal && !timeVal) {
+        notifyInfoLine.textContent =
+          "За да изчисля точен час на напомняне, задай дата или час.";
+        return;
+      }
+
+      const dummyTask = {
+        dueDate: dateVal,
+        dueTime: timeVal,
+        notifyType: "none",
+        notifyMinutes: null
+      };
+
+      if (selectVal === "at") {
+        dummyTask.notifyType = "at";
+      } else if (selectVal === "custom") {
+        const m = parseInt(notifyCustomInput.value, 10);
+        if (!isNaN(m) && m > 0) {
+          dummyTask.notifyType = "before";
+          dummyTask.notifyMinutes = m;
+        }
+      } else {
+        const m = parseInt(selectVal, 10);
+        if (!isNaN(m)) {
+          dummyTask.notifyType = "before";
+          dummyTask.notifyMinutes = m;
+        }
+      }
+
+      const text = formatNotifyPill(dummyTask);
+      if (text) {
+        notifyInfoLine.textContent = "Ще напомни: " + text;
+      } else {
+        notifyInfoLine.textContent = "";
+      }
+    }
+
+    function openNewTask() {
+      editingTaskId = null;
+      newTaskTitleEl.textContent = "Нова задача";
+      createTaskBtn.textContent = "Добави";
+      newTaskCard.style.display = "block";
+      tempSubtasks = [];
+      titleInput.value = "";
+      descInput.value = "";
+      dateInput.value = "";
+      timeInput.value = "";
+      repeatSelect.value = "none";
+      repeatCustomInput.value = "";
+      notifySelect.value = "none";
+      notifyCustomInput.value = "";
+      updateRepeatCustomVisibility();
+      updateNotifyCustomVisibility();
+      updateNotifyInfoPreview();
+      updateSubtasksPreview();
+      titleInput.focus();
+    }
+
+    function openEditTask(task) {
+      editingTaskId = task.id;
+      newTaskTitleEl.textContent = "Редакция на задача";
+      createTaskBtn.textContent = "Запази";
+      newTaskCard.style.display = "block";
+
+      titleInput.value = task.title;
+      descInput.value = task.description || "";
+      dateInput.value = task.dueDate || "";
+      timeInput.value = task.dueTime || "";
+      repeatSelect.value = task.repeat || "none";
+      repeatCustomInput.value = task.repeatCustomDays || "";
+      updateRepeatCustomVisibility();
+
+      if (!task.notifyType || task.notifyType === "none") {
+        notifySelect.value = "none";
+        notifyCustomInput.value = "";
+      } else if (task.notifyType === "at") {
+        notifySelect.value = "at";
+        notifyCustomInput.value = "";
+      } else if (task.notifyType === "before") {
+        const mins = task.notifyMinutes || 0;
+        if (mins === 10 || mins === 60 || mins === 1440) {
+          notifySelect.value = String(mins);
+          notifyCustomInput.value = "";
+        } else {
+          notifySelect.value = "custom";
+          notifyCustomInput.value = mins ? String(mins) : "";
+        }
+      }
+      updateNotifyCustomVisibility();
+      updateNotifyInfoPreview();
+
+      tempSubtasks = (task.subtasks || []).map(s => ({ ...s }));
+      updateSubtasksPreview();
+      titleInput.focus();
+    }
+
+    function closeNewTask() {
+      newTaskCard.style.display = "none";
+      editingTaskId = null;
+      tempSubtasks = [];
+    }
+
+    function updateSubtasksPreview() {
+      if (!tempSubtasks.length) {
+        subtasksPreview.textContent = "Няма подзадачи.";
+      } else {
+        subtasksPreview.textContent =
+          tempSubtasks.length + " подзадачи: " +
+          tempSubtasks.map(s => s.title).join(", ");
+      }
+    }
+
+    function collectNotifyData() {
+      const val = notifySelect.value;
+      if (val === "none") {
+        return { notifyType: "none", notifyMinutes: null };
+      }
+      if (val === "at") {
+        return { notifyType: "at", notifyMinutes: null };
+      }
+      if (val === "custom") {
+        const m = parseInt(notifyCustomInput.value, 10);
+        if (!isNaN(m) && m > 0) {
+          return { notifyType: "before", notifyMinutes: m };
+        }
+        return { notifyType: "none", notifyMinutes: null };
+      }
+      const m = parseInt(val, 10);
+      if (!isNaN(m)) {
+        return { notifyType: "before", notifyMinutes: m };
+      }
+      return { notifyType: "none", notifyMinutes: null };
+    }
+
+    function handleCreateOrUpdateTask() {
+      const title = titleInput.value.trim();
+      if (!title) {
+        alert("Моля, въведи заглавие.");
+        return;
+      }
+
+      const repeat = repeatSelect.value || "none";
+      let repeatCustomDays = null;
+      if (repeat === "custom") {
+        const v = parseInt(repeatCustomInput.value, 10);
+        if (!isNaN(v) && v > 0) repeatCustomDays = v;
+      }
+
+      const notifyData = collectNotifyData();
+
+      if (editingTaskId) {
+        const idx = tasks.findIndex(t => t.id === editingTaskId);
+        if (idx !== -1) {
+          const existing = tasks[idx];
+          Object.assign(existing, {
+            title: title,
+            description: descInput.value || "",
+            dueDate: dateInput.value || null,
+            dueTime: timeInput.value || null,
+            repeat: repeat,
+            repeatCustomDays: repeat === "custom" ? repeatCustomDays : null,
+            notifyType: notifyData.notifyType,
+            notifyMinutes: notifyData.notifyMinutes,
+            subtasks: tempSubtasks,
+            notified: false
+          });
+        }
+      } else {
+        const task = createTaskObj({
+          title,
+          description: descInput.value || "",
+          dueDate: dateInput.value || null,
+          dueTime: timeInput.value || null,
+          repeat,
+          repeatCustomDays,
+          notifyType: notifyData.notifyType,
+          notifyMinutes: notifyData.notifyMinutes,
+          subtasks: tempSubtasks
+        });
+        tasks.push(task);
+      }
+
+      saveTasks();
+      renderTasks();
+      renderCalendar();
+      closeNewTask();
+    }
+
+    // EXPORT / IMPORT
+
+    function exportData() {
+      const dataStr = JSON.stringify(tasks, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dailylist-data.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importData() {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "application/json";
+      input.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (!Array.isArray(imported)) {
+              alert("Невалиден файл.");
+              return;
+            }
+            tasks = imported.map(t => ({
+              subtasks: [],
+              notified: false,
+              repeatCustomDays: null,
+              notifyType: "none",
+              notifyMinutes: null,
+              ...t
+            }));
+            saveTasks();
+            renderTasks();
+            renderCalendar();
+          } catch (err) {
+            alert("Грешка при прочитане на файла.");
+          }
+        };
+        reader.readAsText(file);
+      });
+      input.click();
+    }
+
+    // NOTIFICATIONS (while app is open)
+
+    function ensureNotificationPermission() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+
+    function checkNotifications() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+
+      const now = new Date();
+      tasks.forEach(task => {
+        if (task.completed || task.notified) return;
+        const due = getTaskDateTime(task);
+        if (!due) return;
+
+        let notifyAt = new Date(due.getTime());
+        if (task.notifyType === "before" && task.notifyMinutes) {
+          notifyAt = new Date(due.getTime() - task.notifyMinutes * 60000);
+        } else if (task.notifyType === "none") {
+          return;
+        }
+
+        if (notifyAt <= now) {
+          new Notification("DailyList", { body: task.title });
+          task.notified = true;
+        }
+      });
+      saveTasks();
+    }
+
+    // CALENDAR
+
+    let calendarCurrent = new Date();
+    calendarCurrent.setDate(1);
+
+    function buildCalendarMatrix(monthDate) {
+      const year = monthDate.getFullYear();
+      const month = monthDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      let weekday = firstDay.getDay();
+      if (weekday === 0) weekday = 7; // Monday=1
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      const cells = [];
+      for (let i = 1; i < weekday; i++) cells.push(null);
+      for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+      while (cells.length % 7 !== 0) cells.push(null);
+      return cells;
+    }
+
+    function renderCalendar() {
+      calendarGrid.innerHTML = "";
+      const monthName = calendarCurrent.toLocaleDateString("bg-BG", {
+        month: "long",
+        year: "numeric"
+      });
+      calendarMonthLabel.textContent = monthName;
+
+      const dayNames = ["П", "В", "С", "Ч", "П", "С", "Н"];
+      dayNames.forEach(name => {
+        const dn = document.createElement("div");
+        dn.className = "calendar-day-name";
+        dn.textContent = name;
+        calendarGrid.appendChild(dn);
+      });
+
+      const cells = buildCalendarMatrix(calendarCurrent);
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0, 10);
+
+      const tasksByDate = {};
+      tasks.forEach(t => {
+        if (!t.dueDate) return;
+        tasksByDate[t.dueDate] = true;
+      });
+
+      cells.forEach(dayNum => {
+        const el = document.createElement("div");
+        el.className = "calendar-day";
+        if (dayNum === null) {
+          el.classList.add("disabled");
+          calendarGrid.appendChild(el);
+          return;
+        }
+        el.textContent = dayNum;
+
+        const year = calendarCurrent.getFullYear();
+        const month = calendarCurrent.getMonth();
+        const dateStr = new Date(year, month, dayNum).toISOString().slice(0, 10);
+
+        if (dateStr === todayStr) el.classList.add("today");
+        if (calendarFilterDate === dateStr) el.classList.add("selected");
+        if (tasksByDate[dateStr]) {
+          const dot = document.createElement("div");
+          dot.className = "calendar-dot";
+          el.appendChild(dot);
+        }
+
+        el.addEventListener("click", () => {
+          if (calendarFilterDate === dateStr) {
+            calendarFilterDate = null;
+          } else {
+            calendarFilterDate = dateStr;
+          }
+          renderTasks();
+          renderCalendar();
+        });
+
+        calendarGrid.appendChild(el);
+      });
+    }
+
+    // EVENTS
+
+    fabBtn.addEventListener("click", openNewTask);
+    closeNewTaskBtn.addEventListener("click", closeNewTask);
+    createTaskBtn.addEventListener("click", handleCreateOrUpdateTask);
+
+    addSubtaskTempBtn.addEventListener("click", () => {
+      const name = prompt("Име на подзадачата:");
+      if (!name || !name.trim()) return;
+      tempSubtasks.push(createSubtaskObj(name));
+      updateSubtasksPreview();
+    });
+
+    searchInput.addEventListener("input", e => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderTasks();
+    });
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        statusFilter = btn.getAttribute("data-filter");
+        renderTasks();
+      });
+    });
+
+    dataBtn.addEventListener("click", () => {
+      const choice = prompt("Напиши:\n1 – Експорт\n2 – Импорт");
+      if (choice === "1") exportData();
+      else if (choice === "2") importData();
+    });
+
+    themeToggleBtn.addEventListener("click", toggleTheme);
+
+    calendarToggleBtn.addEventListener("click", () => {
+      const visible = calendarCard.style.display === "block";
+      calendarCard.style.display = visible ? "none" : "block";
+    });
+
+    prevMonthBtn.addEventListener("click", () => {
+      calendarCurrent.setMonth(calendarCurrent.getMonth() - 1);
+      renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener("click", () => {
+      calendarCurrent.setMonth(calendarCurrent.getMonth() + 1);
+      renderCalendar();
+    });
+
+    repeatSelect.addEventListener("change", () => {
+      updateRepeatCustomVisibility();
+      updateNotifyInfoPreview();
+    });
+
+    notifySelect.addEventListener("change", () => {
+      updateNotifyCustomVisibility();
+      updateNotifyInfoPreview();
+    });
+
+    dateInput.addEventListener("change", updateNotifyInfoPreview);
+    timeInput.addEventListener("change", updateNotifyInfoPreview);
+    notifyCustomInput.addEventListener("input", updateNotifyInfoPreview);
+
+    // SERVICE WORKER
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("sw.js")
+          .catch(err => console.log("SW registration failed:", err));
+      });
+    }
+
+    // INIT
+
+    (function init() {
+      formatToday();
+      loadTheme();
+      tasks = loadTasks();
+      renderTasks();
+      renderCalendar();
+      ensureNotificationPermission();
+      setInterval(checkNotifications, 60000);
+    })();
+  </script>
+</body>
+</html>
+
