@@ -154,7 +154,7 @@
     }
 
     body.light .calendar-card {
-      background: #f9fafb;
+      background: #f9fafб;
       border-color: #cbd5f5;
     }
 
@@ -753,7 +753,7 @@
   <button id="fabBtn" class="fab">+</button>
 
   <script>
-    const STORAGE_KEY = "dailylist_tasks_v2";
+    const STORAGE_KEY = "dailylist_tasks_v3";
     const THEME_KEY = "dailylist_theme";
 
     let tasks = [];
@@ -951,6 +951,64 @@
       return true;
     }
 
+    // --- NOTIFY HELPERS ---
+
+    function getNotifyAt(task) {
+      if (task.notifyType === "none") return null;
+      const due = getTaskDateTime(task);
+      if (!due) return null;
+      if (task.notifyType === "at") return due;
+      if (task.notifyType === "before" && task.notifyMinutes) {
+        return new Date(due.getTime() - task.notifyMinutes * 60000);
+      }
+      return null;
+    }
+
+    function formatNotifyConfig(task) {
+      if (task.notifyType === "none") return null;
+      if (task.notifyType === "at") return "В часа";
+      if (task.notifyType === "before" && task.notifyMinutes) {
+        const mins = task.notifyMinutes;
+        if (mins % 1440 === 0) {
+          const d = mins / 1440;
+          return d + " дн. преди";
+        } else if (mins % 60 === 0 && mins >= 60) {
+          const h = mins / 60;
+          return h + " ч. преди";
+        } else {
+          return mins + " мин. преди";
+        }
+      }
+      return null;
+    }
+
+    function formatNotifyCountdown(task) {
+      if (task.completed || task.notified) return null;
+      const notifyAt = getNotifyAt(task);
+      if (!notifyAt) return null;
+      const now = new Date();
+      const diffMs = notifyAt - now;
+      const totalMin = Math.round(diffMs / 60000);
+      if (totalMin <= 0) return "скоро";
+
+      if (totalMin < 60) {
+        return totalMin + " мин.";
+      }
+      if (totalMin < 1440) {
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return h + " ч." + (m ? " " + m + " мин." : "");
+      }
+      const days = Math.floor(totalMin / 1440);
+      const remMin = totalMin % 1440;
+      const h = Math.floor(remMin / 60);
+      let label = days + " дн.";
+      if (h) label += " " + h + " ч.";
+      return label;
+    }
+
+    // --- RENDER TASKS ---
+
     function renderTasks() {
       tasksContainer.innerHTML = "";
       const filtered = tasks.filter(applyFilters);
@@ -1031,34 +1089,22 @@
             meta.appendChild(pillRep);
           }
 
-          if (task.notifyType && task.notifyType !== "none") {
-  const pillNot = document.createElement("span");
-  pillNot.className = "pill";
+          const notifyConfig = formatNotifyConfig(task);
+          if (notifyConfig) {
+            const pillNot = document.createElement("span");
+            pillNot.className = "pill";
+            pillNot.textContent = "🔔 " + notifyConfig;
+            meta.appendChild(pillNot);
+          }
 
-  let label = "🔔 напомняне";
+          const countdown = formatNotifyCountdown(task);
+          if (countdown) {
+            const pillCd = document.createElement("span");
+            pillCd.className = "pill";
+            pillCd.textContent = "⏱ " + countdown;
+            meta.appendChild(pillCd);
+          }
 
-  if (task.notifyType === "at") {
-    // Напомня точно в часа
-    label = "🔔 В часа";
-  } else if (task.notifyType === "before" && task.notifyMinutes) {
-    const mins = task.notifyMinutes;
-    if (mins % 1440 === 0) {
-      // цяло число дни
-      const d = mins / 1440;
-      label = "🔔 " + d + " дн. преди";
-    } else if (mins % 60 === 0 && mins >= 60) {
-      // цяло число часове
-      const h = mins / 60;
-      label = "🔔 " + h + " ч. преди";
-    } else {
-      // минути
-      label = "🔔 " + mins + " мин. преди";
-    }
-  }
-
-  pillNot.textContent = label;
-  meta.appendChild(pillNot);
-}
           if (meta.childNodes.length) taskEl.appendChild(meta);
 
           const actions = document.createElement("div");
@@ -1334,7 +1380,7 @@
       input.click();
     }
 
-    // NOTIFICATIONS (while app is open)
+    // NOTIFICATIONS
 
     function ensureNotificationPermission() {
       if (!("Notification" in window)) return;
@@ -1352,7 +1398,6 @@
         if (reg && reg.showNotification) {
           reg.showNotification("DailyList", {
             body: task.title
-            // по желание: icon: "icon-192.png",
           });
         } else if (typeof Notification === "function") {
           new Notification("DailyList", { body: task.title });
@@ -1371,14 +1416,8 @@
       tasks.forEach(task => {
         if (task.completed || task.notified) return;
 
-        const due = getTaskDateTime(task);
-        if (!due) return;
-        if (task.notifyType === "none") return;
-
-        let notifyAt = new Date(due.getTime());
-        if (task.notifyType === "before" && task.notifyMinutes) {
-          notifyAt = new Date(due.getTime() - task.notifyMinutes * 60000);
-        }
+        const notifyAt = getNotifyAt(task);
+        if (!notifyAt) return;
 
         if (notifyAt <= now) {
           showTaskNotification(task);
@@ -1543,7 +1582,12 @@
       renderTasks();
       renderCalendar();
       ensureNotificationPermission();
-      setInterval(checkNotifications, 60000);
+
+      // На всяка минута: обнови countdown + провери за нотификации
+      setInterval(() => {
+        checkNotifications();
+        renderTasks();
+      }, 60000);
     })();
   </script>
 </body>
