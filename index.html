@@ -842,6 +842,13 @@
       <small id="subtasksPreview" style="margin-top:2px;">Няма подзадачи.</small>
     </div>
 
+    <div class="field">
+      <label for="fileInput">Прикачени файлове</label>
+      <input id="fileInput" type="file" multiple />
+      <small>Файловете се пазят само локално. Големи файлове могат да забавят приложението.</small>
+      <div id="attachmentsPreview" style="font-size:0.75rem;color:#9ca3af;margin-top:2px;"></div>
+    </div>
+
     <div class="new-task-actions">
       <button id="createTaskBtn" class="primary-btn">Добави</button>
     </div>
@@ -873,6 +880,7 @@
 
     let tasks = [];
     let tempSubtasks = [];
+    let tempAttachments = [];
     let statusFilter = "all";
     let searchQuery = "";
     let calendarFilterDate = null;
@@ -907,6 +915,8 @@
     const notifyCustomInput = document.getElementById("notifyCustomInput");
     const addSubtaskTempBtn = document.getElementById("addSubtaskTempBtn");
     const subtasksPreview = document.getElementById("subtasksPreview");
+    const fileInput = document.getElementById("fileInput");
+    const attachmentsPreview = document.getElementById("attachmentsPreview");
     const createTaskBtn = document.getElementById("createTaskBtn");
 
     const dataBtn = document.getElementById("dataBtn");
@@ -945,11 +955,13 @@
         const arr = JSON.parse(raw) || [];
         return arr.map(t => ({
           subtasks: [],
+          attachments: [],
           notified: false,
           repeatCustomDays: null,
           notifyType: "none",
           notifyMinutes: null,
-          ...t
+          ...t,
+          attachments: t.attachments || []
         }));
       } catch {
         return [];
@@ -968,6 +980,15 @@
       };
     }
 
+    function createAttachmentObj(file, dataUrl) {
+      return {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        name: file.name,
+        type: file.type || "",
+        dataUrl
+      };
+    }
+
     function createTaskObj({
       title,
       description,
@@ -977,7 +998,8 @@
       repeatCustomDays,
       notifyType,
       notifyMinutes,
-      subtasks
+      subtasks,
+      attachments
     }) {
       return {
         id: Date.now().toString() + Math.random().toString(16).slice(2),
@@ -992,6 +1014,7 @@
         completed: false,
         createdAt: new Date().toISOString(),
         subtasks: subtasks || [],
+        attachments: attachments || [],
         notified: false
       };
     }
@@ -1054,7 +1077,8 @@
         repeatCustomDays: task.repeatCustomDays,
         notifyType: task.notifyType,
         notifyMinutes: task.notifyMinutes,
-        subtasks: task.subtasks.map(s => ({ ...s, completed: false }))
+        subtasks: task.subtasks.map(s => ({ ...s, completed: false })),
+        attachments: task.attachments
       });
       tasks.push(newTask);
     }
@@ -1285,6 +1309,23 @@
             taskEl.appendChild(stWrap);
           }
 
+          if (task.attachments && task.attachments.length) {
+            const atWrap = document.createElement("div");
+            atWrap.className = "subtasks";
+            task.attachments.forEach(att => {
+              const aRow = document.createElement("div");
+              aRow.className = "subtask";
+              const link = document.createElement("a");
+              link.textContent = "📎 " + att.name;
+              link.href = att.dataUrl;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              aRow.appendChild(link);
+              atWrap.appendChild(aRow);
+            });
+            taskEl.appendChild(atWrap);
+          }
+
           tasksContainer.appendChild(taskEl);
         });
     }
@@ -1301,12 +1342,58 @@
         notifySelect.value === "custom" ? "flex" : "none";
     }
 
+    function updateSubtasksPreview() {
+      if (!tempSubtasks.length) {
+        subtasksPreview.textContent = "Няма подзадачи.";
+      } else {
+        subtasksPreview.textContent =
+          tempSubtasks.length + " подзадачи: " +
+          tempSubtasks.map(s => s.title).join(", ");
+      }
+    }
+
+    function updateAttachmentsPreview() {
+      attachmentsPreview.innerHTML = "";
+      if (!tempAttachments.length) {
+        attachmentsPreview.textContent = "Няма прикачени файлове.";
+        return;
+      }
+      tempAttachments.forEach((att, index) => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.justifyContent = "space-between";
+        row.style.gap = "4px";
+        row.style.marginTop = "2px";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = "📎 " + att.name;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "✕";
+        removeBtn.style.border = "none";
+        removeBtn.style.background = "none";
+        removeBtn.style.color = "#9ca3af";
+        removeBtn.style.fontSize = "0.8rem";
+        removeBtn.style.cursor = "pointer";
+        removeBtn.addEventListener("click", () => {
+          tempAttachments.splice(index, 1);
+          updateAttachmentsPreview();
+        });
+
+        row.appendChild(nameSpan);
+        row.appendChild(removeBtn);
+        attachmentsPreview.appendChild(row);
+      });
+    }
+
     function openNewTask() {
       editingTaskId = null;
       newTaskTitleEl.textContent = "Нова задача";
       createTaskBtn.textContent = "Добави";
       newTaskCard.style.display = "block";
       tempSubtasks = [];
+      tempAttachments = [];
       titleInput.value = "";
       descInput.value = "";
       dateInput.value = "";
@@ -1315,9 +1402,11 @@
       repeatCustomInput.value = "";
       notifySelect.value = "none";
       notifyCustomInput.value = "";
+      fileInput.value = "";
       updateRepeatCustomVisibility();
       updateNotifyCustomVisibility();
       updateSubtasksPreview();
+      updateAttachmentsPreview();
       titleInput.focus();
     }
 
@@ -1354,7 +1443,10 @@
       updateNotifyCustomVisibility();
 
       tempSubtasks = (task.subtasks || []).map(s => ({ ...s }));
+      tempAttachments = (task.attachments || []).map(a => ({ ...a }));
+      fileInput.value = "";
       updateSubtasksPreview();
+      updateAttachmentsPreview();
       titleInput.focus();
     }
 
@@ -1362,16 +1454,7 @@
       newTaskCard.style.display = "none";
       editingTaskId = null;
       tempSubtasks = [];
-    }
-
-    function updateSubtasksPreview() {
-      if (!tempSubtasks.length) {
-        subtasksPreview.textContent = "Няма подзадачи.";
-      } else {
-        subtasksPreview.textContent =
-          tempSubtasks.length + " подзадачи: " +
-          tempSubtasks.map(s => s.title).join(", ");
-      }
+      tempAttachments = [];
     }
 
     function collectNotifyData() {
@@ -1426,6 +1509,7 @@
             notifyType: notifyData.notifyType,
             notifyMinutes: notifyData.notifyMinutes,
             subtasks: tempSubtasks,
+            attachments: tempAttachments,
             notified: false
           });
         }
@@ -1439,7 +1523,8 @@
           repeatCustomDays,
           notifyType: notifyData.notifyType,
           notifyMinutes: notifyData.notifyMinutes,
-          subtasks: tempSubtasks
+          subtasks: tempSubtasks,
+          attachments: tempAttachments
         });
         tasks.push(task);
       }
@@ -1482,11 +1567,13 @@
             }
             tasks = imported.map(t => ({
               subtasks: [],
+              attachments: [],
               notified: false,
               repeatCustomDays: null,
               notifyType: "none",
               notifyMinutes: null,
-              ...t
+              ...t,
+              attachments: t.attachments || []
             }));
             saveTasks();
             renderTasks();
@@ -1651,6 +1738,21 @@
       if (!name || !name.trim()) return;
       tempSubtasks.push(createSubtaskObj(name));
       updateSubtasksPreview();
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const dataUrl = ev.target.result;
+          tempAttachments.push(createAttachmentObj(file, dataUrl));
+          updateAttachmentsPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+      fileInput.value = "";
     });
 
     searchInput.addEventListener("input", e => {
